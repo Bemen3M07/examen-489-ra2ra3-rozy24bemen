@@ -4,11 +4,11 @@
 
 **Unitats Formatives:** RA2 i RA3  
 **Curs:** 2n DAM · Videojocs  
-**Data:** ____________________  
+**Data:** 23/03/2026
 **Durada:** 2 hores  
 
-**Alumne/a:** ________________________________________________  
-**Grup:** __________________________________________________  
+**Alumne/a:** Roman Zyuzin Alenxandrov
+**Grup:** 2DAM
 
 ---
 
@@ -42,7 +42,8 @@ Al projecte **Cars**, el widget `CarsPage` gestiona el número de pàgina actual
 **Resposta:**
 
 ```
-[Escriu la teva resposta aquí]
+[La funció setState es crida quan el objecte state ha canviat, aixó li diu al programa que aquest widget s'ha de tornar a mostrar.
+Perque la primera serveix per notificar que s'ha de mostrar visualment que esta cargant i la segona notifica que ja ha cargat.]
 ```
 
 ---
@@ -56,7 +57,7 @@ Al projecte **Camera**, el widget `CameraScreen` utilitza un `CameraController` 
 **Resposta:**
 
 ```
-[Escriu la teva resposta aquí]
+[El metode dispose, ho fa de forma CameraController.dispose() on cameracontroller pot ser qualsevol controlador. Ho fa per no gastar recursos de més i per si un altre metodo demana el permís per camara que no surti que ja esta en us]
 ```
 
 ---
@@ -70,7 +71,9 @@ Al projecte **Camera**, el widget `CameraScreen` utilitza un `CameraController` 
 **Resposta:**
 
 ```
-[Escriu la teva resposta aquí]
+[Perque si fas el await al initState la aplicacio es quedara penjada esperant el await y no mostrara res per pantalla.
+Perque amb el FutureBuilder podem modificar altres coses aixi com mostrar un text de que esta carregant o fins i tot animacions de carrega, si bloquejen el fil fins que no termini la pagina es queda congelada
+Quan la pantalla es mostra el initializecontrollerfuture pot guardar l'estat actual del futurebuilder i saber que mostrar exactament depenent de l'estat.]
 ```
 
 ---
@@ -83,13 +86,24 @@ Analitza el mètode `getCarsPage(int page, int limit)` de `car_http_service.dart
 
 Què passaria si el servidor de l'API trigués 60 segons a respondre? L'aplicació quedaria bloquejada per a l'usuari? Per què? Escriu com implementaries un *timeout* de 10 segons a la petició HTTP.
 
-**Resposta:**
+**Resposta:** En aquest cas el metode ja integra un timeout de 10 seconds, si l'api triga 60 segons, al segon 11 ja haura retornat un error en aquest cas de no resposta, 404.
 
 ```dart
 // Escriu la modificació al getCarsPage aquí:
-Future<List<CarsModel>> getCarsPage(int page, int limit) async {
-  // ...
-}
+  Future<List<CarsModel>> getCarsPage(int page, int limit) async {
+    final offset = (page - 1) * limit;
+    final uri = _buildUri('/v1/cars', {'limit': '$limit', 'offset': '$offset'});
+
+    final response = await http
+        .get(uri, headers: _headers)
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return CarsModel.listFromJsonString(response.body);
+    } else {
+      throw Exception('Error ${response.statusCode}: ${response.body}');
+    }
+  }
 ```
 
 ---
@@ -103,9 +117,20 @@ Analitza el constructor `factory CarsModel.fromMapToCarObject(Map<String, dynami
 **Resposta:**
 
 ```
-[Escriu la teva resposta aquí]
+[Si nosaltres volem que el camp year sigue sempre un int, una vegada rebem el json i fem el mapa podem guardar as int, en aquest cas ja guarda year com int, el que podem fer es parcejar el json a string sempre i després a int de forma que entri String o int sempre surti int, pseudocodi a sota]
 ```
-
+  factory CarsModel.fromMapToCarObject(Map<String, dynamic> json) {
+    return CarsModel(
+      id: json['id'] as int,
+      year: int.tryParse(json['year'].toString()) as int,
+      make: json['make'] as String? ?? '',
+      model: json['model'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      city: json['city'] as String? ?? '',
+      color: json['color'] as String? ?? '',
+    );
+  }
+  
 ---
 
 **b)** Al fitxer `class_model_test.dart`, el test utilitza un `const jsonString` amb un JSON escrit a mà en lloc de fer una petició real a l'API de RapidAPI. Explica per quin motiu és millor simular el JSON en un test unitari.
@@ -113,7 +138,7 @@ Analitza el constructor `factory CarsModel.fromMapToCarObject(Map<String, dynami
 **Resposta:**
 
 ```
-[Escriu la teva resposta aquí]
+[Primer de tot s'ha d'entendre perque fem el test unitari, el test unitari serveix per probar el funcionament d'un widget en concret, el millor es aillar i limitar el errors que em poden donar, per comprobar l'integritat de l'api ja tinc el postman, a més a més es sobrecomplicarse perque només comprobem l'estructura d'un json que sempre te la mateixa estructura, si tenim molts test i una api es paga per request ens estalviem recursos.]
 ```
 
 ---
@@ -134,6 +159,8 @@ Imagina que volem crear una pantalla de detall per a cada cotxe del projecte Car
 ```dart
 // Escriu el teu codi aquí:
 
+Nota alumno: El siguiente widget esta hecho a mano por petición del profesor, con el indicativo de mostrar y demostrar los conocimientos lógicos en la materia, hay errores de sintaxis, la idea es que sea suficiente para ver la estructura general priorizando la creatividad y lógica por encima de memorizar y escupir.
+
 class CarDetailPage extends StatelessWidget {
   final CarsModel car;
 
@@ -141,7 +168,21 @@ class CarDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // implementa aquí
+    Scaffold{
+      Appbar: appbar(title: "Lista Coches"),
+      body: center{
+        child: column{
+          children: [
+            text((car.make, car.model) style: bold),
+            icon(car.type == "SUV" ? Icons.directions_car : Icons.car_rental),
+            ElevatedButton(
+              onPressed: -> show.snackbar(text("Cotxe seleccionat: " [$car.make] [$car.model] ));
+              child: text("botó")
+            )
+          ]
+        }
+      }
+    }
   }
 }
 ```
@@ -153,6 +194,36 @@ class CarDetailPage extends StatelessWidget {
 ```dart
 //Escriu la teva ampliació aquí:
 ```
+
+Alumno: Vale en este caso ya tenemos un Future en cars_page que se encarga de avisarme si la pagina esta cargando. Es la siguiente:
+
+  Future<void> _loadPage() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final cars = await _service.getCarsPage(_currentPage, _itemsPerPage);
+      setState(() {
+        _cars = cars;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+Entonces seria del estilo cambiarla para que currentpage y itemsperpage tenga los numeros del enunciado y luego hacer un
+if(_isloading) {
+  CircularProgressIndicator
+} else if(_error == null){
+  print(ListView.builder(car.make))
+} else {
+  Text(_error)
+}
 
 ---
 
@@ -192,7 +263,19 @@ Requisits:
 
 ```dart
 // Escriu aquí la teva implementació completa del mètode:
+  Future<List<CarsModel>> getCarsByFilter(String make, int model) async {
+    final uri = _buildUri('/v1/cars', {'make':'$make', '$model':'x'});
 
+    final response = await http
+        .get(uri, headers: _headers)
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return CarsModel.listFromJsonString(response.body);
+    } else {
+      throw Exception('Error ${response.statusCode}: ${response.body}');
+    }
+  }
 ```
 
 ---

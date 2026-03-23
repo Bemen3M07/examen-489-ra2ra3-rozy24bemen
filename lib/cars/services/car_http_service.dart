@@ -69,4 +69,19 @@ class CarHttpService {
       throw Exception('Error ${response.statusCode}: ${response.body}');
     }
   }
+
+//Codigo implementado por alumno, compilable, no he podido compilar la aplicación en general asi que no me he molestado ni a llamar al método
+    Future<List<CarsModel>> getCarsByFilter(String make, int model) async {
+    final uri = _buildUri('/v1/cars', {'make':'$make', '$model':'x'});
+
+    final response = await http
+        .get(uri, headers: _headers)
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return CarsModel.listFromJsonString(response.body);
+    } else {
+      throw Exception('Error ${response.statusCode}: ${response.body}');
+    }
+  }
 }
